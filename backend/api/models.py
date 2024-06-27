@@ -13,7 +13,7 @@ class Operation(models.Model):
     quantity = models.FloatField()
     price = models.FloatField()
     fee = models.FloatField()
-    comment = models.TextField()
+    comment = models.TextField(blank=True)
     owner = models.ForeignKey(to=UserProfile, on_delete=models.CASCADE)
     pocket_name = models.CharField(max_length=100)
     

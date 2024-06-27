@@ -6,6 +6,8 @@ router = DefaultRouter()
 router.register(r'operations', views.OperationsViewSet, basename='operation')
 router.register(r'pockets', views.PocketsViewSet, basename='pocket')
 router.register(r'asset-allocations', views.AssetAllocationViewSet, basename='asset-allocation')
+router.register(r'currencies', views.CurencyViewSet, basename='currency')
+router.register(r'asset-classes', views.AssetClassViewSet, basename='asset-class')
 
 
 

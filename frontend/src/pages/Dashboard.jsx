@@ -5,11 +5,13 @@ import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
 import Toolbar from "@mui/material/Toolbar";
+
 import Chart from "../components/Chart";
 import Deposits from "../components/Deposits";
 import SideBar from "../components/bars/SideBar";
 import AppBar from "../components/bars/AppBar";
 import PageContainer from "../components/PageContainer";
+import Pockets from "../components/Pockets";
 
 const defaultTheme = createTheme();
 
@@ -27,7 +29,6 @@ export default function Dashboard() {
         <SideBar open={open} toggleDrawer={toggleDrawer} />
 
         <PageContainer>
-
           <Grid item xs={12} md={8} lg={9}>
             <Paper
               sx={{
@@ -51,6 +52,16 @@ export default function Dashboard() {
               }}
             >
               <Deposits />
+            </Paper>
+          </Grid>
+          <Grid item xs={4}>
+            <Paper
+              sx={{ p: 2, display: "flex", flexDirection: "column" }}
+            >
+              <Pockets />
+
+
+
             </Paper>
           </Grid>
         </PageContainer>

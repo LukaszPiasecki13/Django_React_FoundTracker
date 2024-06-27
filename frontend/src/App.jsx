@@ -6,7 +6,7 @@ import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import Operations from "./pages/Operations";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Pockets from "./pages/Pockets";
+import Pockets from "./components/Pockets";
 import PocketDetail from "./pages/PocketDetail";
 
 function RegisterAndLogout() {

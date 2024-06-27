@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useParams } from "react-router-dom";
 import { styled, createTheme, ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import Box from "@mui/material/Box";
@@ -10,21 +11,37 @@ import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
-import SideBar from "../components/bars/SideBar";
-import AppBar from "../components/bars/AppBar";
-import api from "../api";
-import PageContainer from "../components/PageContainer";
 import Toolbar from "@mui/material/Toolbar";
 
+import api from "../api";
+import SideBar from "../components/bars/SideBar";
+import AppBar from "../components/bars/AppBar";
+import PageContainer from "../components/PageContainer";
 import Title from "../components/Title";
+import AddMenus from "../components/AddMenus";
 
 function preventDefault(event) {
   event.preventDefault();
 }
 
 export default function PocketDetail() {
+  const pocketName = useParams().slug;
   const defaultTheme = createTheme();
   const [open, setOpen] = React.useState(true);
+
+  const [pocketDetail, setPocketDetail] = React.useState([]);
+
+
+  const getOperations = () => {
+    api
+      .get("api/asset-allocations?pocket_name=" + pocketName)
+      .then((res) => res.data)
+      .then((data) => {
+        setPocketDetail(data);
+      })
+      .catch((err) => alert(err));
+  };
+
   const toggleDrawer = () => {
     setOpen(!open);
   };
@@ -33,15 +50,6 @@ export default function PocketDetail() {
     getOperations();
   }, []);
 
-  const [operations, setOperations] = React.useState([]);
-
-  const getOperations = () => {
-    api
-      .get("api/asset-allocations")
-      .then((res) => res.data)
-      .then((data) => setOperations(data), console.log(data))
-      .catch((err) => alert(err));
-  };
 
   return (
     <ThemeProvider theme={defaultTheme}>
@@ -50,6 +58,9 @@ export default function PocketDetail() {
         <AppBar open={open} toggleDrawer={toggleDrawer} />
         <SideBar open={open} toggleDrawer={toggleDrawer} />
         <PageContainer>
+          <Grid item xs={4}>
+            <AddMenus pocketName={pocketName} />
+          </Grid>
           <Grid item xs={12}>
             <Paper sx={{ p: 2, display: "flex", flexDirection: "column" }}>
               <React.Fragment>
@@ -73,11 +84,11 @@ export default function PocketDetail() {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {operations.map((row) => (
+                    {pocketDetail.map((row) => (
                       <TableRow key={row.id}>
                         <TableCell>{row.asset.name}</TableCell>
                         <TableCell>{row.asset.asset_class}</TableCell>
-                        <TableCell>{row.asset.currency}</TableCell>
+                        <TableCell>{row.asset.currency.name}</TableCell>
                         <TableCell>{row.quantity}</TableCell>
                         <TableCell>{row.average_purchase_price}</TableCell>
                         <TableCell>{row.asset.current_price}</TableCell>
@@ -103,7 +114,6 @@ export default function PocketDetail() {
               </React.Fragment>
             </Paper>
           </Grid>
-          
         </PageContainer>
       </Box>
     </ThemeProvider>
