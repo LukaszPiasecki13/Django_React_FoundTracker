@@ -12,6 +12,7 @@ import TableCell from "@mui/material/TableCell";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Toolbar from "@mui/material/Toolbar";
+import { useNavigate, useLocation  } from "react-router-dom";
 
 import api from "../api";
 import SideBar from "../components/bars/SideBar";
@@ -19,22 +20,28 @@ import AppBar from "../components/bars/AppBar";
 import PageContainer from "../components/PageContainer";
 import Title from "../components/Title";
 import AddMenus from "../components/AddMenus";
+import { Button } from "@mui/material";
 
 function preventDefault(event) {
   event.preventDefault();
 }
 
 export default function PocketDetail() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const pocketName = useParams().slug;
   const defaultTheme = createTheme();
   const [open, setOpen] = React.useState(true);
 
   const [pocketDetail, setPocketDetail] = React.useState([]);
 
-
   const getOperations = () => {
     api
-      .get("api/asset-allocations?pocket_name=" + pocketName)
+    .get("api/asset-allocations", {
+      params: {
+        pocket_name: pocketName
+      }
+    })
       .then((res) => res.data)
       .then((data) => {
         setPocketDetail(data);
@@ -50,7 +57,6 @@ export default function PocketDetail() {
     getOperations();
   }, []);
 
-
   return (
     <ThemeProvider theme={defaultTheme}>
       <Box sx={{ display: "flex" }}>
@@ -58,8 +64,22 @@ export default function PocketDetail() {
         <AppBar open={open} toggleDrawer={toggleDrawer} />
         <SideBar open={open} toggleDrawer={toggleDrawer} />
         <PageContainer>
-          <Grid item xs={4}>
+          <Grid item xs={2}>
             <AddMenus pocketName={pocketName} />
+          </Grid>
+          <Grid item xs={1}>
+            <Button
+              variant="contained"
+              size="medium"
+              onClick={() =>navigate(`${location.pathname}/charts`)}
+            >
+              Charts
+            </Button>
+          </Grid>
+          <Grid item xs={1}>
+            <Button variant="contained" size="medium" onClick={() =>navigate(`${location.pathname}/history`)}>
+              History
+            </Button>
           </Grid>
           <Grid item xs={12}>
             <Paper sx={{ p: 2, display: "flex", flexDirection: "column" }}>
@@ -78,8 +98,8 @@ export default function PocketDetail() {
                       <TableCell>Daily change PLN</TableCell>
                       <TableCell>Participation in portfolio</TableCell>
                       <TableCell>Rate of return</TableCell>
-                      <TableCell>Rate of return [PLN]</TableCell>
-                      <TableCell>Profit [PLN]</TableCell>
+                      <TableCell>Rate of return</TableCell>
+                      <TableCell>Profit</TableCell>
                       <TableCell align="right">Dividend</TableCell>
                     </TableRow>
                   </TableHead>
@@ -90,15 +110,46 @@ export default function PocketDetail() {
                         <TableCell>{row.asset.asset_class}</TableCell>
                         <TableCell>{row.asset.currency.name}</TableCell>
                         <TableCell>{row.quantity}</TableCell>
-                        <TableCell>{row.average_purchase_price}</TableCell>
-                        <TableCell>{row.asset.current_price}</TableCell>
-                        <TableCell>{row.daily_change_percent}</TableCell>
-                        <TableCell>{row.daily_change_XXX}</TableCell>
-                        <TableCell>{row.participation}</TableCell>
-                        <TableCell>{row.rate_of_return}</TableCell>
-                        <TableCell>{row.rate_of_return_XXX}</TableCell>
-                        <TableCell>{row.profit_XXX}</TableCell>
-                        <TableCell align="right">{`$${row.dividends}`}</TableCell>
+                        <TableCell>${row.average_purchase_price}</TableCell>
+                        <TableCell>${row.asset.current_price}</TableCell>
+                        <TableCell
+                          style={{
+                            color:
+                              row.daily_change_percent < 0 ? "red" : "green",
+                          }}
+                        >
+                          {row.daily_change_percent}%
+                        </TableCell>
+                        <TableCell
+                          style={{
+                            color: row.daily_change_XXX < 0 ? "red" : "green",
+                          }}
+                        >
+                          ${row.daily_change_XXX}
+                        </TableCell>
+                        <TableCell>{row.participation}%</TableCell>
+                        <TableCell
+                          style={{
+                            color: row.rate_of_return < 0 ? "red" : "green",
+                          }}
+                        >
+                          {row.rate_of_return}%
+                        </TableCell>
+                        <TableCell
+                          style={{
+                            color: row.rate_of_return_XXX < 0 ? "red" : "green",
+                          }}
+                        >
+                          ${row.rate_of_return_XXX}
+                        </TableCell>
+                        <TableCell
+                          style={{
+                            color: row.profit_XXX < 0 ? "red" : "green",
+                          }}
+                        >
+                          ${row.profit_XXX}
+                        </TableCell>
+                        <TableCell align="right">${row.dividends}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

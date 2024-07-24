@@ -59,6 +59,7 @@ export default function Operations() {
                   <TableHead>
                     <TableRow>
                       <TableCell>Date</TableCell>
+                      <TableCell>Pocket</TableCell>
                       <TableCell>Operation</TableCell>
                       <TableCell>Asset Class</TableCell>
                       <TableCell>Name</TableCell>
@@ -73,6 +74,7 @@ export default function Operations() {
                     {operations.map((row) => (
                       <TableRow key={row.id}>
                         <TableCell>{row.date}</TableCell>
+                        <TableCell>{row.pocket_name}</TableCell>
                         <TableCell>{row.operation_type}</TableCell>
                         <TableCell>{row.asset_class}</TableCell>
                         <TableCell>name</TableCell>

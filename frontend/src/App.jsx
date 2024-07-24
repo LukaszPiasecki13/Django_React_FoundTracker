@@ -8,6 +8,8 @@ import Operations from "./pages/Operations";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Pockets from "./components/Pockets";
 import PocketDetail from "./pages/PocketDetail";
+import PocketCharts from "./pages/PocketCharts";
+import PocketHistory from "./pages/PocketHistory";
 
 function RegisterAndLogout() {
   localStorage.clear();
@@ -26,7 +28,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        
+
         <Route
           path="/operations"
           element={
@@ -48,6 +50,22 @@ function App() {
           element={
             <ProtectedRoute>
               <PocketDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/pockets/:slug/charts"
+          element={
+            <ProtectedRoute>
+              <PocketCharts />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/pockets/:slug/history"
+          element={
+            <ProtectedRoute>
+              <PocketHistory />
             </ProtectedRoute>
           }
         />
