@@ -3,17 +3,8 @@ import { LineChart, axisClasses } from "@mui/x-charts";
 import CircularProgress from '@mui/material/CircularProgress';
 
 
-export default function Chart({x, y}) {
-  const [loading, setLoading] = React.useState(true);
+export default function Chart({x, y, loading}) {
 
-  // Effect for setting the charging state
-  React.useEffect(() => {
-    if (x && y) {
-      setLoading(false);
-    } else {
-      setLoading(true);
-    }
-  }, [x, y]);
 
   return (
     <React.Fragment>

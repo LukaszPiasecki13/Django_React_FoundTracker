@@ -8,7 +8,7 @@ import Toolbar from "@mui/material/Toolbar";
 import Title from "../components/Title";
 
 import Chart from "../components/Chart";
-import Deposits from "../components/Deposits";
+import RecentScore from "../components/RecentScore";
 import SideBar from "../components/bars/SideBar";
 import AppBar from "../components/bars/AppBar";
 import PageContainer from "../components/PageContainer";
@@ -24,7 +24,7 @@ export default function Dashboard() {
     setOpen(!open);
   };
 
-  const [data, setData] = React.useState([]);
+  const [chartData, setData] = React.useState([]);
 
   const getProfitOverTime = () => {
     api
@@ -36,11 +36,11 @@ export default function Dashboard() {
         },
       })
       .then((response) => {
-        const chartData = ({
+        const chartDataa = ({
           date: response.data.Date,
           value: response.data.Close,
         });
-        setData(chartData);
+        setData(chartDataa);
       })
       .catch((error) => {
         console.error("Error fetching data:", error);
@@ -51,6 +51,19 @@ export default function Dashboard() {
     getProfitOverTime();
   }, []);
   
+  const [loading, setLoading] = React.useState(true);
+  const [recentScoreValue, setRecentScoreValue] = React.useState(true);
+
+  // Effect for setting the charging state
+  React.useEffect(() => {
+    if (chartData.value) {
+      setLoading(false);
+      setRecentScoreValue(chartData.value[chartData.value.length - 1]);
+    } else {
+      setLoading(true);
+      setRecentScoreValue(0)
+    }
+  }, [chartData]);
 
   return (
     <ThemeProvider theme={defaultTheme}>
@@ -70,7 +83,7 @@ export default function Dashboard() {
               }}
             >
               <Title>Portfolio Score</Title>
-              <Chart x={data.date} y={data.value} />
+              <Chart x={chartData.date} y={chartData.value} loading={loading}/>
             </Paper>
           </Grid>
           {/* Recent Deposits */}
@@ -83,7 +96,8 @@ export default function Dashboard() {
                 height: 240,
               }}
             >
-              <Deposits />
+
+              <RecentScore value={recentScoreValue} />
             </Paper>
           </Grid>
           <Grid item xs={4}>

@@ -107,7 +107,7 @@ class ProfitDataView(APIView):
             ticker_value = pd.Series(ticker_data['Close'].values, index=ticker_data.index)
 
             # We calculate the profit for a given ticker
-            ticker_value = ticker_value*operation.quantity-operation.fee - operation.price*operation.quantity
+            ticker_value = (ticker_value*operation.quantity-operation.fee - operation.price*operation.quantity).round(2)
             portfolio_profit = portfolio_profit.add(ticker_value, fill_value=0)
 
         portfolio_profit = portfolio_profit.round(2)
