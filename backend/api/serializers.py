@@ -13,6 +13,11 @@ class OperationSerializer(serializers.ModelSerializer):
         model = models.Operation
         fields = "__all__"
 
+class CurrencySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Currency
+        fields = "__all__"
+
 class AssetAllocationSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -21,6 +26,7 @@ class AssetAllocationSerializer(serializers.ModelSerializer):
         depth = 2
 
 class PocketSerializer(serializers.ModelSerializer):
+    currency = CurrencySerializer() # Zagnieżdżony serializer
     class Meta:
         model = models.Pocket
         fields = "__all__"

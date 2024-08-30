@@ -7,7 +7,7 @@ import NotFound from "./pages/NotFound";
 import Operations from "./pages/Operations";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Pockets from "./components/Pockets";
-import PocketDetail from "./pages/PocketDetail";
+import PocketAssetsDetail from "./pages/PocketAssetsDetail";
 import PocketCharts from "./pages/PocketCharts";
 import PocketHistory from "./pages/PocketHistory";
 
@@ -49,7 +49,7 @@ function App() {
           path="/pockets/:slug"
           element={
             <ProtectedRoute>
-              <PocketDetail />
+              <PocketAssetsDetail />
             </ProtectedRoute>
           }
         />

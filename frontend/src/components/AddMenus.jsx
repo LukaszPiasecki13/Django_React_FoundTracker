@@ -57,7 +57,7 @@ const StyledMenu = styled((props) => (
 }));
 
 export default function AddMenus(props) {
-  const pocketName = props.pocketName;
+  const pocket = props.pocket;
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [buyDialogOpen, setBuyDialogOpen] = React.useState(false);
   const [sellDialogOpen, setSellDialogOpen] = React.useState(false);
@@ -74,9 +74,14 @@ export default function AddMenus(props) {
     setBuyDialogOpen(true);
   };
 
+  const handleSellDialogOpen = () => {
+    setSellDialogOpen(true);
+  };
+
 
   const handleDialogClose = () => {
     setBuyDialogOpen(false);
+    setSellDialogOpen(false);
   };
   return (
     <div>
@@ -110,7 +115,11 @@ export default function AddMenus(props) {
         >
           Buy
         </MenuItem>
-        <MenuItem onClick={handleClose} disableRipple>
+        <MenuItem onClick={() => {
+            handleClose();
+            handleSellDialogOpen();
+          }}
+          disableRipple>
           Sell
         </MenuItem>
         <Divider sx={{ my: 0.5 }} />
@@ -121,8 +130,8 @@ export default function AddMenus(props) {
           Withdraw funds
         </MenuItem>
       </StyledMenu>
-    <BuyDialog open={buyDialogOpen} onClose={handleDialogClose} pocketName = {pocketName} />
-    {/* <SellDialog open={buyDialogOpen} onClose={handleDialogClose} /> */}
+    <BuyDialog open={buyDialogOpen} onClose={handleDialogClose} pocket = {pocket} />
+    <SellDialog open={sellDialogOpen} onClose={handleDialogClose} pocket = {pocket} pocketAssetAllocationDetail={props.pocketAssetAllocationDetail} />
     </div>
   );
 }

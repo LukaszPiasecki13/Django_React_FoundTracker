@@ -16,8 +16,9 @@ import Grid from "@mui/material/Grid";
 import api from "../../api";
 
 export default function BuyDialog(props) {
-  const { open, onClose, pocketName } = props;
+  const { open, onClose, pocket } = props;
   const [currencies, setCurrencies] = React.useState([]);
+  const [showCurrencyPriceBox, setShowCurrencyPriceBox] = React.useState([]);
   const [assetClasses, setAssetClasses] = React.useState([]);
 
   const getCurrencies = () => {
@@ -59,13 +60,14 @@ export default function BuyDialog(props) {
     operation_type: "buy",
     asset_class: "",
     ticker: "",
-    date: "",
+    date: new Date().toISOString().split('T')[0],
     currency: "",
+    purchase_currency_price: 1.0,
     quantity: "",
     price: "",
     fee: 0.0,
     comment: "",
-    pocket_name: pocketName 
+    pocket_name: pocket.name
   });
 
   const handleChange = (event) => {
@@ -77,8 +79,22 @@ export default function BuyDialog(props) {
     });
   };
 
+  const handleChangeCurrency = (event) => {
+    const { value } = event.target;
+
+    if (value != pocket.currency.name) {
+      setShowCurrencyPriceBox(true);
+    }
+    else {
+      setShowCurrencyPriceBox(false);
+    }
+    handleChange(event);
+  };
+
   const handleSubmit = (event) => {
     event.preventDefault();
+    console.log(pocket.name);
+    console.log(formValues);
     buyAsset(event);
     onClose();
   };
@@ -98,7 +114,6 @@ export default function BuyDialog(props) {
                   defaultValue=""
                   onChange={handleChange}
                   required
-                  autoWidth
                   size="small"
                 >
                   {assetClasses.map((assetClass) => (
@@ -125,6 +140,7 @@ export default function BuyDialog(props) {
                 label="Date"
                 name="date"
                 type="date"
+                defaultValue = {new Date().toISOString().split('T')[0]}
                 onChange={handleChange}
                 required
                 size="small"
@@ -137,8 +153,8 @@ export default function BuyDialog(props) {
                 <Select
                   id="currency"
                   name="currency"
-                  defaultValue=""
-                  onChange={handleChange}
+                  defaultValue={pocket?.currency?.name || ''} // set pocket.currency.name if is loaded or ''
+                  onChange={handleChangeCurrency}
                   required
                   size="small"
                 >
@@ -161,6 +177,19 @@ export default function BuyDialog(props) {
                 size="small"
               />
             </Grid>
+            {showCurrencyPriceBox === true && (
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Currency Price"
+                  name="purchase_currency_price"
+                  type="number"
+                  onChange={handleChange}
+                  required
+                  size="small"
+                />
+              </Grid>
+            )}
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth

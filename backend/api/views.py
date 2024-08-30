@@ -33,8 +33,8 @@ class OperationsViewSet(viewsets.ModelViewSet):
         return Operation.objects.filter(owner=self.request.user)
 
     def perform_create(self, serializer):
-
         serializer.save(owner=self.request.user)
+
         process_operation(data = serializer.data, owner = self.request.user)
 
 
@@ -43,7 +43,14 @@ class PocketsViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Pocket.objects.filter(owner=self.request.user)
+        queryset = Pocket.objects.filter(owner=self.request.user)
+        name = self.request.query_params.get('name', None)
+
+        if name is not None:
+            # Filter by name
+            queryset = queryset.filter(name=name)
+        
+        return queryset
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -113,7 +120,7 @@ class ProfitDataView(APIView):
         portfolio_profit = portfolio_profit.round(2)
         portfolio_profit_reset = portfolio_profit.reset_index()
         portfolio_profit_reset.columns = ['Date', 'Close']
-        print(portfolio_profit_reset)
+        # print(portfolio_profit_reset)
 
         if interval == "day":
             portfolio_profit_reset['Date'] = portfolio_profit_reset['Date'].dt.strftime('%Y-%m-%d')
