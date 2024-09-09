@@ -12,7 +12,7 @@ import yfinance as yf
 import pandas as pd
 from datetime import datetime, timedelta
 
-from .lib.asset_processor import process_operation, update_assets
+from .lib.AssetProcessor import AssetProcessor
 
 class UsersView(generics.ListCreateAPIView):
     queryset = UserProfile.objects.all()
@@ -33,9 +33,18 @@ class OperationsViewSet(viewsets.ModelViewSet):
         return Operation.objects.filter(owner=self.request.user)
 
     def perform_create(self, serializer):
+        # TODO: Walidacja danych
+        processor = AssetProcessor(data=serializer.validated_data, owner=self.request.user)
+        try:
+            if serializer.validated_data['operation_type'] == 'buy':
+                processor.buy_operation()
+            elif serializer.validated_data['operation_type'] == 'sell':
+                processor.subtract_objects()
+                ...
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)    
+        
         serializer.save(owner=self.request.user)
-
-        process_operation(data = serializer.data, owner = self.request.user)
 
 
 class PocketsViewSet(viewsets.ModelViewSet):
@@ -63,8 +72,9 @@ class AssetAllocationViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         pocket_name = self.request.query_params.get('pocket_name', None)
-        pocket = Pocket.objects.get(owner = self.request.user, name = pocket_name)
-        update_assets(pocket_name=pocket_name, owner=self.request.user)
+        processor = AssetProcessor(owner = self.request.user)
+        processor.update_assets(pocket_name=pocket_name)
+        pocket = Pocket.objects.get(name = pocket_name)
 
         return AssetAllocation.objects.filter(pocket=pocket)
     

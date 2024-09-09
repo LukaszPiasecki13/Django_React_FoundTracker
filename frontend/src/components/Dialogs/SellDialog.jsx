@@ -13,24 +13,27 @@ import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import Grid from "@mui/material/Grid";
 
+import api from "../../api";
+
 export default function SellDialog(props) {
   const { open, onClose, pocket } = props;
   const pocketAssetAllocationDetail = props.pocketAssetAllocationDetail;
 
   const [showCurrencyPriceBox, setShowCurrencyPriceBox] = React.useState([]);
 
+
   const [formValues, setFormValues] = React.useState({
     operation_type: "sell",
     asset_class: "",
     ticker: "",
     date: new Date().toISOString().split("T")[0],
-    currency: "",
-    purchase_currency_price: 0.0,
+    currency: pocket.currency ? pocket.currency.name : "",
+    purchase_currency_price: 1.0,
     quantity: "",
     price: "",
     fee: 0.0,
     comment: "",
-    pocket_name: pocket.name,
+    pocket_name: pocket ? pocket.name : "",
   });
 
   const getUniqueValues = (data, key) => {
@@ -42,17 +45,31 @@ export default function SellDialog(props) {
 
   const handleChange = (event) => {
     const { name, value } = event.target;
-    const numValue = !isNaN(value) ? parseInt(value) : value;
+    const numValue = !isNaN(value) ? parseFloat(value) : value;
     setFormValues({
       ...formValues,
       [name]: numValue,
     });
   };
 
+  const handleChangeCurrency = (event) => {
+    const { value } = event.target;
+
+    if (value != pocket.currency.name) {
+      setShowCurrencyPriceBox(true);
+    } else {
+      formValues["purchase_currency_price"] = 1.0;
+      setShowCurrencyPriceBox(false);
+    }
+    handleChange(event);
+  };
+
   const handleSubmit = (event) => {
-    s;
+    formValues["pocket_name"] = pocket.name;
+    // formValues["currency"] = pocket.currency.name;
     event.preventDefault();
-    s;
+    console.log(formValues);
+    sellAsset();
     onClose();
   };
 
@@ -65,12 +82,23 @@ export default function SellDialog(props) {
     "asset.currency.name"
   );
   const tickers = getUniqueValues(pocketAssetAllocationDetail, "asset.ticker");
+  const defaultCurrency = currencies.includes(pocket?.currency?.name) ? pocket.currency.name : '';
+
+  const sellAsset = (e) => {
+    api
+      .post("api/operations/", formValues)
+      .then((res) => {
+        if (res.status === 201) alert("Operation created successfully");
+        else alert("Error creating operation");
+      })
+      .catch((err) => alert(err));
+  };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs">
       <DialogTitle>SELL</DialogTitle>
       <DialogContent>
-        <Box component="form" noValidate onSubmit={handleSubmit}>
+        <Box component="form" onSubmit={handleSubmit} autoComplete="off">
           <Grid container spacing={2}>
             <Grid item xs={12}>
               <FormControl fullWidth>
@@ -97,6 +125,7 @@ export default function SellDialog(props) {
                 <Select
                   fullWidth
                   label="Ticker"
+                  defaultValue=""
                   name="ticker"
                   onChange={handleChange}
                   required
@@ -129,8 +158,8 @@ export default function SellDialog(props) {
                 <Select
                   id="currency"
                   name="currency"
-                  defaultValue={pocket?.currency?.name || ''} // set pocket.currency.name if is loaded or ''
-                  onChange={handleChange}
+                  defaultValue={defaultCurrency} // set pocket.currency.name if is loaded or ''
+                  onChange={handleChangeCurrency}
                   required
                   size="small"
                 >
@@ -151,6 +180,10 @@ export default function SellDialog(props) {
                 onChange={handleChange}
                 required
                 size="small"
+                inputProps={{ 
+                  min: 0.001, 
+                  step: 0.001 
+                }}
               />
             </Grid>
             {showCurrencyPriceBox === true && (
@@ -163,6 +196,10 @@ export default function SellDialog(props) {
                   onChange={handleChange}
                   required
                   size="small"
+                  inputProps={{ 
+                    min: 0.001, 
+                    step: 0.001 
+                  }}
                 />
               </Grid>
             )}
@@ -175,6 +212,10 @@ export default function SellDialog(props) {
                 onChange={handleChange}
                 required
                 size="small"
+                inputProps={{ 
+                  min: 0.001, 
+                  step: 0.001 
+                }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -185,6 +226,10 @@ export default function SellDialog(props) {
                 type="number"
                 onChange={handleChange}
                 size="small"
+                inputProps={{ 
+                  min: 0.001, 
+                  step: 0.001 
+                }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -198,14 +243,12 @@ export default function SellDialog(props) {
               />
             </Grid>
           </Grid>
+          <DialogActions>
+            <Button onClick={onClose}>Cancel</Button>
+            <Button type="submit">SELL</Button>
+          </DialogActions>
         </Box>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button type="submit" onClick={handleSubmit}>
-          SELL
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 }

@@ -26,7 +26,7 @@
             "request": "launch",
             "module" : "pytest",
             "args": [
-                "${workspaceFolder}/backend/api/tests/test_views.py::TestAssetAllocationViews"
+                "${workspaceFolder}/backend/api/tests/test_views.py"
             ],
             "justMyCode": true
           }

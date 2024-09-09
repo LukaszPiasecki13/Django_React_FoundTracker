@@ -60,19 +60,19 @@ export default function BuyDialog(props) {
     operation_type: "buy",
     asset_class: "",
     ticker: "",
-    date: new Date().toISOString().split('T')[0],
-    currency: "",
+    date: new Date().toISOString().split("T")[0],
+    currency: pocket.currency ? pocket.currency.name : "",
     purchase_currency_price: 1.0,
     quantity: "",
     price: "",
     fee: 0.0,
     comment: "",
-    pocket_name: pocket.name
+    pocket_name: pocket ? pocket.name : "",
   });
 
   const handleChange = (event) => {
     const { name, value } = event.target;
-    const numValue = !isNaN(value) ? parseInt(value) : value;
+    const numValue = !isNaN(value) ? parseFloat(value) : value;
     setFormValues({
       ...formValues,
       [name]: numValue,
@@ -84,16 +84,17 @@ export default function BuyDialog(props) {
 
     if (value != pocket.currency.name) {
       setShowCurrencyPriceBox(true);
-    }
-    else {
+    } else {
+      formValues["purchase_currency_price"] = 1.0;
       setShowCurrencyPriceBox(false);
     }
     handleChange(event);
   };
 
   const handleSubmit = (event) => {
-    event.preventDefault();
-    console.log(pocket.name);
+    formValues["pocket_name"] = pocket.name;
+    // formValues["currency"] = pocket.currency.name;
+    // event.preventDefault();
     console.log(formValues);
     buyAsset(event);
     onClose();
@@ -103,7 +104,7 @@ export default function BuyDialog(props) {
     <Dialog open={open} onClose={onClose} maxWidth="xs">
       <DialogTitle>BUY</DialogTitle>
       <DialogContent>
-        <Box component="form" noValidate onSubmit={handleSubmit}>
+        <Box component="form" onSubmit={handleSubmit} autoComplete="off">
           <Grid container spacing={2}>
             <Grid item xs={12}>
               <FormControl fullWidth>
@@ -140,7 +141,7 @@ export default function BuyDialog(props) {
                 label="Date"
                 name="date"
                 type="date"
-                defaultValue = {new Date().toISOString().split('T')[0]}
+                defaultValue={new Date().toISOString().split("T")[0]}
                 onChange={handleChange}
                 required
                 size="small"
@@ -153,7 +154,7 @@ export default function BuyDialog(props) {
                 <Select
                   id="currency"
                   name="currency"
-                  defaultValue={pocket?.currency?.name || ''} // set pocket.currency.name if is loaded or ''
+                  defaultValue={pocket?.currency?.name || ""} // set pocket.currency.name if is loaded or ''
                   onChange={handleChangeCurrency}
                   required
                   size="small"
@@ -175,6 +176,10 @@ export default function BuyDialog(props) {
                 onChange={handleChange}
                 required
                 size="small"
+                inputProps={{ 
+                  min: 0.001, 
+                  step: 0.001 
+                }}
               />
             </Grid>
             {showCurrencyPriceBox === true && (
@@ -187,6 +192,10 @@ export default function BuyDialog(props) {
                   onChange={handleChange}
                   required
                   size="small"
+                  inputProps={{ 
+                    min: 0.001, 
+                    step: 0.001 
+                  }}
                 />
               </Grid>
             )}
@@ -199,6 +208,10 @@ export default function BuyDialog(props) {
                 onChange={handleChange}
                 required
                 size="small"
+                inputProps={{ 
+                  min: 0.001, 
+                  step: 0.001 
+                }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -209,6 +222,10 @@ export default function BuyDialog(props) {
                 type="number"
                 onChange={handleChange}
                 size="small"
+                inputProps={{ 
+                  min: 0.001, 
+                  step: 0.001 
+                }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -222,14 +239,12 @@ export default function BuyDialog(props) {
               />
             </Grid>
           </Grid>
+          <DialogActions>
+            <Button onClick={onClose}>Cancel</Button>
+            <Button type="submit">Buy</Button>
+          </DialogActions>
         </Box>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button type="submit" onClick={handleSubmit}>
-          Buy
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 }
