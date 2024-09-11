@@ -88,10 +88,10 @@ export default function SellDialog(props) {
     api
       .post("api/operations/", formValues)
       .then((res) => {
-        if (res.status === 201) alert("Operation created successfully");
+        if (res.status === 201) alert("Operation successfully");
         else alert("Error creating operation");
       })
-      .catch((err) => alert(err));
+      .catch((err) => alert(err.response.data.error));
   };
 
   return (

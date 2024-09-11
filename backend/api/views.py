@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 
 from authentication.models import UserProfile
 from .serializers import UserSerializer, OperationSerializer, AssetAllocationSerializer, PocketSerializer, CurencySerializer, AssetClassSerializer
+from rest_framework import serializers
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from .models import Operation, AssetAllocation, Pocket, Currency, AssetClass
 from rest_framework import status
@@ -37,14 +38,17 @@ class OperationsViewSet(viewsets.ModelViewSet):
         processor = AssetProcessor(data=serializer.validated_data, owner=self.request.user)
         try:
             if serializer.validated_data['operation_type'] == 'buy':
-                processor.buy_operation()
+                result = processor.buy_operation()
             elif serializer.validated_data['operation_type'] == 'sell':
-                processor.subtract_objects()
-                ...
+                result = processor.subtract_objects()
+                
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)    
+            raise serializers.ValidationError({"error": str(e)})
         
-        serializer.save(owner=self.request.user)
+        if result:
+            serializer.save(owner=self.request.user)
+        else:
+            return Response({"error": "Error with operation processing"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class PocketsViewSet(viewsets.ModelViewSet):
@@ -52,6 +56,7 @@ class PocketsViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+
         queryset = Pocket.objects.filter(owner=self.request.user)
         name = self.request.query_params.get('name', None)
 
@@ -61,6 +66,7 @@ class PocketsViewSet(viewsets.ModelViewSet):
         
         return queryset
 
+
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
@@ -68,7 +74,6 @@ class PocketsViewSet(viewsets.ModelViewSet):
 class AssetAllocationViewSet(viewsets.ModelViewSet):
     serializer_class = AssetAllocationSerializer
     permission_classes = [IsAuthenticated]
-    # get_queryset = AssetAllocation.objects.all()
     
     def get_queryset(self):
         pocket_name = self.request.query_params.get('pocket_name', None)
