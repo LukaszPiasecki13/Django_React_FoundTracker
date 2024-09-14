@@ -6,13 +6,13 @@ from authentication.models import UserProfile
 
 class Operation(models.Model):
     operation_type = models.CharField(max_length=20) # buy, sell
-    asset_class = models.CharField()
-    ticker = models.CharField(max_length=20)
+    asset_class = models.CharField(null=True, blank=True,)
+    ticker = models.CharField(max_length=20, null=True, blank=True,)
     date = models.DateField()
-    currency = models.CharField(max_length=3)
-    purchase_currency_price = models.DecimalField(max_digits=8, decimal_places=3, default=1.0)
+    currency = models.CharField(max_length=3, null=True, blank=True,)
+    purchase_currency_price = models.FloatField(null=True, blank=True, default=1.0)
     quantity = models.FloatField()
-    price = models.FloatField()
+    price = models.FloatField(null=True, blank=True)
     fee = models.FloatField()
     comment = models.TextField(blank=True)
     owner = models.ForeignKey(to=UserProfile, on_delete=models.CASCADE)
@@ -20,7 +20,7 @@ class Operation(models.Model):
     
 
     def __str__(self):
-        return ("{}_{}_{}".format(self.id, self.operation_type, self.ticker))
+        return ("{}_{}_{}_{}".format(self.id, self.operation_type, self.ticker, self.pocket_name))
 
 
 class AssetClass(models.Model):
@@ -62,6 +62,7 @@ class Pocket(models.Model):
     assets = models.ManyToManyField('Asset', through='AssetAllocation')
     fees = models.DecimalField(max_digits=8, decimal_places=3, default=0.0)
     currency = models.ForeignKey(Currency, on_delete=models.CASCADE)
+    free_cash = models.DecimalField(max_digits=12, decimal_places=3, default=0.0)
 
     def __str__(self):
         return self.name

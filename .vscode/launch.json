@@ -3,13 +3,17 @@
     // Hover to view descriptions of existing attributes.
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
-    "configurations": [
-
-
-
-        
+    "configurations": [        
         {
-            "name": "Python Debugger: Django",
+            "name": "Launch Chrome",
+            "request": "launch",
+            "type": "chrome",
+            "url": "http://localhost:5173",
+            "webRoot": "${workspaceFolder}/frontend"
+        },
+
+        {
+            "name": "Python Debugger",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/backend/manage.py",
@@ -30,5 +34,12 @@
             ],
             "justMyCode": true
           }
-    ]
+    ],
+
+    "compounds": [
+        {
+          "name": "Debug Frontend & Backend",
+          "configurations": ["Launch Chrome", "Python Debugger"]
+        }
+      ]
 }

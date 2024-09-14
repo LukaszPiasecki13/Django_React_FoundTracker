@@ -68,8 +68,7 @@ export default function SellDialog(props) {
     formValues["pocket_name"] = pocket.name;
     // formValues["currency"] = pocket.currency.name;
     event.preventDefault();
-    console.log(formValues);
-    sellAsset();
+    process();
     onClose();
   };
 
@@ -84,7 +83,7 @@ export default function SellDialog(props) {
   const tickers = getUniqueValues(pocketAssetAllocationDetail, "asset.ticker");
   const defaultCurrency = currencies.includes(pocket?.currency?.name) ? pocket.currency.name : '';
 
-  const sellAsset = (e) => {
+  const process = (e) => {
     api
       .post("api/operations/", formValues)
       .then((res) => {

@@ -28,7 +28,7 @@ export default function BuyDialog(props) {
       .then((data) => {
         setCurrencies(data);
       })
-      .catch((err) => alert(err));
+      .catch((err) => alert(err.response.data.error));
   };
 
   const getAssetClasses = () => {
@@ -38,17 +38,17 @@ export default function BuyDialog(props) {
       .then((data) => {
         setAssetClasses(data);
       })
-      .catch((err) => alert(err));
+      .catch((err) => alert(err.response.data.error));
   };
 
-  const buyAsset = (e) => {
+  const process = (e) => {
     api
       .post("api/operations/", formValues)
       .then((res) => {
         if (res.status === 201) alert("Operation created successfully");
         else alert("Error creating operation");
       })
-      .catch((err) => alert(err));
+      .catch((err) => alert(err.response.data.error));
   };
 
   React.useEffect(() => {
@@ -93,10 +93,7 @@ export default function BuyDialog(props) {
 
   const handleSubmit = (event) => {
     formValues["pocket_name"] = pocket.name;
-    // formValues["currency"] = pocket.currency.name;
-    // event.preventDefault();
-    console.log(formValues);
-    buyAsset(event);
+    process(event);
     onClose();
   };
 

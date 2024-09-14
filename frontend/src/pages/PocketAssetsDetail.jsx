@@ -47,7 +47,7 @@ export default function PocketAssetsDetail() {
       .then((data) => {
         setPocketAssetAllocationDetail(data);
       })
-      .catch((err) => alert(err));
+      .catch((err) => alert(err.response.data.error));
   };
 
   const getPocketDetail = () => {

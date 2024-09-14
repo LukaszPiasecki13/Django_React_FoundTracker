@@ -145,6 +145,63 @@ class TestOperationViews:
             asset__ticker='AAPL', pocket=pocket).exists() == False
         assert pocket.fees == 0
 
+    def test_operations_wrong_data(self, api_client):
+        api_client.force_authenticate(user=self.user)
+        url = reverse('operation-list')
+
+        def set_default_data():
+            return {
+            'asset_class': 'Equity',
+            'ticker': 'AAPL',
+            'operation_type': 'buy',
+            'quantity': 1,
+            'price': 1,
+            'fee': 1,
+            'currency': 'USD',
+            "purchase_currency_price": 1,
+            'date': '2022-01-01',
+            'comment': 'Test comment',
+            'pocket_name': self.pocket_name
+        }
+
+
+        for price in (-10, -1 ,0):
+            data = set_default_data()
+            data['price'] = price
+            response = api_client.post(url, data)
+            assert response.status_code == 400
+            if price == 0:
+                assert response.content == b'{"non_field_errors":["Missing required fields."]}'
+            else:
+                assert response.content == b'{"non_field_errors":["Price must be greater than 0."]}'
+
+        for quantity in (-10, -1 ,0):
+            data = set_default_data()
+            data['quantity'] = quantity
+            response = api_client.post(url, data)
+            assert response.status_code == 400
+            if quantity == 0:
+                assert response.content == b'{"non_field_errors":["Missing required fields."]}'
+            else:
+                assert response.content == b'{"non_field_errors":["Quantity must be greater than 0."]}'
+
+        for fee in (-10, -1):
+            data = set_default_data()
+            data['fee'] = fee
+            response = api_client.post(url, data)
+            assert response.status_code == 400
+            assert response.content == b'{"non_field_errors":["Fee must be greater or equal to 0."]}'
+
+        for purchase_currency_price in (-10, -1 ,0):
+            data = set_default_data()
+            data['purchase_currency_price'] = purchase_currency_price
+            response = api_client.post(url, data)
+            assert response.status_code == 400
+            if purchase_currency_price == 0:
+                assert response.content == b'{"non_field_errors":["Missing required fields."]}'
+            else:
+                assert response.content == b'{"non_field_errors":["Purchase currency price must be greater than 0."]}'
+
     def test_buy_random_assets_with_replacement(self, api_client):
         api_client.force_authenticate(user=self.user)
         url = reverse('operation-list')
@@ -207,9 +264,10 @@ class TestOperationViews:
                     data for data in beckup_data if data['operation_type'] == 'buy' and data['ticker'] == draw_data['ticker']]
                 sell_operations = [
                     data for data in beckup_data if data['operation_type'] == 'sell' and data['ticker'] == draw_data['ticker']]
-                
+
                 buy_quantity = sum(item['quantity'] for item in buy_operations)
-                sell_quantity = sum(item['quantity'] for item in sell_operations)
+                sell_quantity = sum(item['quantity']
+                                    for item in sell_operations)
 
                 response = api_client.post(url, draw_data)
 
@@ -217,7 +275,7 @@ class TestOperationViews:
                     assert response.status_code == 400
                     assert response.content == b'{"error":"Not enough assets to sell"}'
                 elif buy_quantity == sell_quantity:
-                    assert response.status_code == 201  
+                    assert response.status_code == 201
                     assert not AssetAllocation.objects.filter(
                         asset__ticker=draw_data['ticker'], pocket=pocket).exists()
                     total_fee += draw_data['fee']
@@ -227,12 +285,16 @@ class TestOperationViews:
                         asset__ticker=draw_data['ticker'], pocket=pocket)
 
                     assert asset_allocation.quantity == buy_quantity - sell_quantity
-                    assert asset_allocation.fee == sum(item['fee'] for item in buy_operations+sell_operations)
+                    assert asset_allocation.fee == sum(
+                        item['fee'] for item in buy_operations+sell_operations)
 
-                    buy_transactions = [(price, quantity, fee) for operation in buy_operations for price, quantity, fee in [(operation['price'], operation['quantity'], operation['fee'])]]
-                    sell_transactions = [(price, quantity, fee) for operation in sell_operations for price, quantity, fee in [(operation['price'], operation['quantity'], operation['fee'])]] 
+                    buy_transactions = [(price, quantity, fee) for operation in buy_operations for price, quantity, fee in [
+                        (operation['price'], operation['quantity'], operation['fee'])]]
+                    sell_transactions = [(price, quantity, fee) for operation in sell_operations for price, quantity, fee in [
+                        (operation['price'], operation['quantity'], operation['fee'])]]
 
-                    average_purchase_price = AssetProcessor._calculate_average_purchase_price(buy_transactions=buy_transactions, sell_transactions=sell_transactions)
+                    average_purchase_price = AssetProcessor._calculate_average_purchase_price(
+                        buy_transactions=buy_transactions, sell_transactions=sell_transactions)
 
                     try:
                         assert asset_allocation.average_purchase_price == pytest.approx(
@@ -246,10 +308,88 @@ class TestOperationViews:
         pocket = Pocket.objects.get(name=self.pocket_name)
         assert pocket.fees == total_fee
 
+    def test_add_funds(self, api_client):
+        api_client.force_authenticate(user=self.user)
+        url = reverse('operation-list')
+        FREE_CASH = 100
+        fee_check = 0
+        pocket = Pocket.objects.get(name=self.pocket_name)
+        pocket.free_cash = FREE_CASH
+        pocket.save()
 
+        for quantity in (-1, 0, 1, 1.1, 100):
+            for fee in (-1, 0, 1, 1.1, 100):
+                data = {
+                    "operation_type": "add_funds",
+                    "asset_class": None,
+                    "ticker": None,
+                    "date": "2024-09-13",
+                    "currency": None,
+                    "purchase_currency_price": None,
+                    "quantity": quantity,
+                    "price": None,
+                    "fee": fee,
+                    "comment": "",
+                    "pocket_name": self.pocket_name
+                }
 
+                response = api_client.post(url, data, format='json')
 
- 
+                if quantity <= 0 or fee < 0:
+                    assert response.status_code == 400
+                    assert response.content == b'{"non_field_errors":["Quantity must be greater than 0."]}' if quantity <= 0 else b'{"non_field_errors":["Fee must be greater or equal to 0."]}'
+
+                else:
+                    assert response.status_code == 201
+                    fee_check += fee
+                    assert Pocket.objects.get(name=self.pocket_name).fees == pytest.approx(
+                        Decimal(fee_check), abs=0.01)
+                    
+                    pocket = Pocket.objects.get(name=self.pocket_name)
+                    assert pocket.free_cash == pytest.approx( Decimal(FREE_CASH) + Decimal(quantity), abs=0.01)
+                    pocket.free_cash = FREE_CASH
+                    pocket.save()
+
+    def test_withdraw_funds(self, api_client):
+        api_client.force_authenticate(user=self.user)
+        url = reverse('operation-list')
+        pocket = Pocket.objects.get(name=self.pocket_name)
+        FREE_CASH = 100
+        pocket.free_cash = FREE_CASH
+        pocket.save()
+
+        for quantity in (-1, 0, 1, 1.1, 100):
+            data = {
+                "operation_type": "withdraw_funds",
+                "asset_class": None,
+                "ticker": None,
+                "date": "2024-09-13",
+                "currency": None,
+                "purchase_currency_price": None,
+                "quantity": quantity,
+                "price": None,
+                "fee": 0,
+                "comment": "",
+                "pocket_name": self.pocket_name
+            }
+
+            response = api_client.post(url, data, format='json')
+
+            if quantity <= 0 :
+                assert response.status_code == 400
+                assert response.content == b'{"non_field_errors":["Quantity must be greater than 0."]}' 
+            elif pocket.free_cash - quantity < 0:
+                assert response.status_code == 400
+                assert response.content == b'{"error":"Not enough cash to withdraw"}'
+            else:
+                assert response.status_code == 201
+                assert Pocket.objects.get(name=self.pocket_name).fees == 0
+                pocket = Pocket.objects.get(name=self.pocket_name)
+                assert pocket.free_cash == pytest.approx( Decimal(FREE_CASH) - Decimal(quantity), abs=0.01)
+
+                pocket.free_cash = FREE_CASH
+                pocket.save()
+
 
 @pytest.mark.django_db
 class TestAssetAllocationViews:

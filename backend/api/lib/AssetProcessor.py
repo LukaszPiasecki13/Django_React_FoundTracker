@@ -196,7 +196,24 @@ class AssetProcessor:
         
         pocket.save()
         return True
-        
+
+    def add_funds(self):
+        pocket = Pocket.objects.get(name=self.data['pocket_name'], owner=self.owner)
+        pocket.free_cash += Decimal(self.data['quantity'])
+        pocket.fees += Decimal(self.data['fee'])
+        pocket.save()
+        return True
+    
+    def withdraw_funds(self):
+        pocket = Pocket.objects.get(name=self.data['pocket_name'], owner=self.owner)
+        if pocket.free_cash < Decimal(self.data['quantity']):
+            raise ValueError("Not enough free cash to withdraw")
+        else:
+            pocket.free_cash -= Decimal(self.data['quantity'])
+            pocket.fees += Decimal(self.data['fee'])
+            pocket.save()
+            return True
+
     def update_assets(self, pocket_name: str):
         pocket = Pocket.objects.get(name=pocket_name, owner=self.owner)
 

@@ -13,6 +13,36 @@ class OperationSerializer(serializers.ModelSerializer):
         model = models.Operation
         fields = "__all__"
 
+    ticker = serializers.CharField(required=False, allow_null=True)
+    asset_class = serializers.CharField(required=False, allow_null=True)
+    currency = serializers.CharField(required=False, allow_null=True)
+    price = serializers.FloatField(required=False, allow_null=True)
+    purchase_currency_price = serializers.FloatField(required=False, allow_null=True)
+
+
+    def validate(self, data):
+        operation_type = data.get('operation_type')
+        
+        if operation_type in ['buy', 'sell']:
+            if not data.get('ticker') or not data.get('asset_class') or not data.get('currency') or not data.get('price') or not data.get('purchase_currency_price') or not data.get('quantity'):
+                raise serializers.ValidationError("Missing required fields.")
+            elif data['quantity'] <= 0:
+                raise serializers.ValidationError("Quantity must be greater than 0.")
+            elif data['price'] <= 0:
+                raise serializers.ValidationError("Price must be greater than 0.")
+            elif data['fee'] < 0:
+                raise serializers.ValidationError("Fee must be greater or equal to 0.")
+            elif data['purchase_currency_price'] <= 0:
+                raise serializers.ValidationError("Purchase currency price must be greater than 0.")
+        
+        elif operation_type == 'add_funds' or operation_type == 'withdraw_funds':
+            if data['quantity'] <= 0:
+                raise serializers.ValidationError("Quantity must be greater than 0.")
+            elif data['fee'] < 0:
+                raise serializers.ValidationError("Fee must be greater or equal to 0.")
+
+        return data
+
 class CurrencySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Currency

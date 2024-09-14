@@ -41,6 +41,10 @@ class OperationsViewSet(viewsets.ModelViewSet):
                 result = processor.buy_operation()
             elif serializer.validated_data['operation_type'] == 'sell':
                 result = processor.subtract_objects()
+            elif serializer.validated_data['operation_type'] == 'add_funds':
+                result = processor.add_funds()
+            elif serializer.validated_data['operation_type'] == 'withdraw_funds':
+                result = processor.withdraw_funds()
                 
         except Exception as e:
             raise serializers.ValidationError({"error": str(e)})
