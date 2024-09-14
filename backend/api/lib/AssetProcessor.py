@@ -23,6 +23,27 @@ class AssetProcessor:
     def buy_operation(self):
         asset_name = self._get_asset_name(ticker=self.data['ticker'])
 
+                
+        try:
+            # Check pocket free cash
+            pocket = Pocket.objects.get(
+                name=self.data['pocket_name'], owner=self.owner)
+            if pocket.free_cash < Decimal(self.data['price'] * self.data['quantity']):
+                raise ValueError("Not enough free cash to buy the asset")
+            else:
+                pocket.free_cash -= Decimal(self.data['price'] * self.data['quantity'] + self.data['fee'])
+                if self.data['fee'] != 0:
+                    if self.data['currency'] == pocket.currency.name:
+                        pocket.fees += Decimal(self.data['fee'])
+                    else:
+                        pocket.fees += Decimal(self.data['fee']
+                                            * self.data['purchase_currency_price'])
+
+        
+        except Exception as e:
+            raise e
+
+
         try:
             # ASSET
             # Check if asset exists in the database
@@ -41,21 +62,6 @@ class AssetProcessor:
         except Exception as e:
             raise e
 
-        try:
-            # POCKET FEE
-            pocket = Pocket.objects.get(
-                name=self.data['pocket_name'], owner=self.owner)
-            if self.data['fee'] != 0:
-                if self.data['currency'] == pocket.currency.name:
-                    pocket.fees += Decimal(self.data['fee'])
-                else:
-                    pocket.fees += Decimal(self.data['fee']
-                                           * self.data['purchase_currency_price'])
-
-                pocket.save()
-
-        except Exception as e:
-            raise e
 
         try:
             # ASSET ALLOCATION
@@ -110,7 +116,8 @@ class AssetProcessor:
 
         except Exception as e:
             raise e
-
+        
+        pocket.save()
         return True
 
     def subtract_objects(self):
@@ -132,7 +139,11 @@ class AssetProcessor:
             raise e
         
         try:
-            pocket = Pocket.objects.get(name=self.data['pocket_name'], owner=self.owner)
+            # Check pocket free cash
+            pocket = Pocket.objects.get(
+                name=self.data['pocket_name'], owner=self.owner)
+
+            pocket.free_cash += Decimal(self.data['price'] * self.data['quantity'] - self.data['fee'])
 
             # POCKET FEE
             if self.data['fee'] != 0:
@@ -141,10 +152,10 @@ class AssetProcessor:
                 else:
                     pocket.fees += Decimal(self.data['fee']
                                         * self.data['purchase_currency_price'])
-
+        
         except Exception as e:
             raise e
-
+    
         try:
             # ASSET ALLOCATION
             # Check if asset allocation exists in the database

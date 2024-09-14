@@ -79,11 +79,12 @@ class TestOperationViews:
         usd = create_currency('USD', 1)
         pln = create_currency('PLN', 4)
         eur = create_currency('EUR', 1.2)
+        self.START_CASH = 10000000
 
         self.pocket_name = 'TestPocket'
 
         Pocket.objects.create(name=self.pocket_name,
-                              owner=self.user, currency=usd, fees=0)
+                              owner=self.user, currency=usd, fees=0, free_cash=self.START_CASH)
 
     def test_operations_list(self, api_client):
         api_client.force_authenticate(user=self.user)
@@ -151,21 +152,20 @@ class TestOperationViews:
 
         def set_default_data():
             return {
-            'asset_class': 'Equity',
-            'ticker': 'AAPL',
-            'operation_type': 'buy',
-            'quantity': 1,
-            'price': 1,
-            'fee': 1,
-            'currency': 'USD',
-            "purchase_currency_price": 1,
-            'date': '2022-01-01',
-            'comment': 'Test comment',
-            'pocket_name': self.pocket_name
-        }
+                'asset_class': 'Equity',
+                'ticker': 'AAPL',
+                'operation_type': 'buy',
+                'quantity': 1,
+                'price': 1,
+                'fee': 1,
+                'currency': 'USD',
+                "purchase_currency_price": 1,
+                'date': '2022-01-01',
+                'comment': 'Test comment',
+                'pocket_name': self.pocket_name
+            }
 
-
-        for price in (-10, -1 ,0):
+        for price in (-10, -1, 0):
             data = set_default_data()
             data['price'] = price
             response = api_client.post(url, data)
@@ -175,7 +175,7 @@ class TestOperationViews:
             else:
                 assert response.content == b'{"non_field_errors":["Price must be greater than 0."]}'
 
-        for quantity in (-10, -1 ,0):
+        for quantity in (-10, -1, 0):
             data = set_default_data()
             data['quantity'] = quantity
             response = api_client.post(url, data)
@@ -192,7 +192,7 @@ class TestOperationViews:
             assert response.status_code == 400
             assert response.content == b'{"non_field_errors":["Fee must be greater or equal to 0."]}'
 
-        for purchase_currency_price in (-10, -1 ,0):
+        for purchase_currency_price in (-10, -1, 0):
             data = set_default_data()
             data['purchase_currency_price'] = purchase_currency_price
             response = api_client.post(url, data)
@@ -234,6 +234,12 @@ class TestOperationViews:
             assert asset_allocation.average_purchase_price == pytest.approx(
                 Decimal(average_purchase_price), abs=0.01)
 
+        pocket = Pocket.objects.get(name=self.pocket_name)
+        total_cost = sum(item['quantity']*item['price'] +
+                         item['fee'] for item in beckup_data)
+        assert pocket.free_cash == pytest.approx(
+            Decimal(self.START_CASH - total_cost), abs=0.01)
+
     def test_buy_sell_random(self, api_client):
         api_client.force_authenticate(user=self.user)
         url = reverse('operation-list')
@@ -241,6 +247,7 @@ class TestOperationViews:
         transactionFactory = TransactionFactory(
             user=self.user, pocket_name=self.pocket_name)
         beckup_data = []
+        success_operations = []
 
         for _ in range(ASSET_COUNT):
             draw_data = transactionFactory.draw_buy(allow_duplicates=True)
@@ -248,6 +255,7 @@ class TestOperationViews:
 
             response = api_client.post(url, draw_data)
             assert response.status_code == 201
+            success_operations.append(draw_data)
 
         tickers = list(set([operation["ticker"] for operation in beckup_data]))
         pocket = Pocket.objects.get(name=draw_data['pocket_name'])
@@ -278,7 +286,7 @@ class TestOperationViews:
                     assert response.status_code == 201
                     assert not AssetAllocation.objects.filter(
                         asset__ticker=draw_data['ticker'], pocket=pocket).exists()
-                    total_fee += draw_data['fee']
+                    success_operations.append(draw_data)
                 elif buy_quantity > sell_quantity:
                     assert response.status_code == 201
                     asset_allocation = AssetAllocation.objects.get(
@@ -296,17 +304,21 @@ class TestOperationViews:
                     average_purchase_price = AssetProcessor._calculate_average_purchase_price(
                         buy_transactions=buy_transactions, sell_transactions=sell_transactions)
 
-                    try:
-                        assert asset_allocation.average_purchase_price == pytest.approx(
-                            Decimal(average_purchase_price), abs=0.01)
-                    except AssertionError:
-                        ...
-                    total_fee += draw_data['fee']
+                    assert asset_allocation.average_purchase_price == pytest.approx(
+                        Decimal(average_purchase_price), abs=0.01)
+                    success_operations.append(draw_data)
             else:
                 break
 
         pocket = Pocket.objects.get(name=self.pocket_name)
+        total_fee = sum(item['fee'] for item in success_operations)
         assert pocket.fees == total_fee
+        total_cost_buy = sum(item['quantity']*item['price']+item['fee']
+                             for item in success_operations if item['operation_type'] == 'buy')
+        total_cost_sell = sum(item['quantity']*item['price']-item['fee']
+                              for item in success_operations if item['operation_type'] == 'sell')
+        assert pocket.free_cash == pytest.approx(
+            Decimal(self.START_CASH - total_cost_buy + total_cost_sell), abs=0.01)
 
     def test_add_funds(self, api_client):
         api_client.force_authenticate(user=self.user)
@@ -344,9 +356,10 @@ class TestOperationViews:
                     fee_check += fee
                     assert Pocket.objects.get(name=self.pocket_name).fees == pytest.approx(
                         Decimal(fee_check), abs=0.01)
-                    
+
                     pocket = Pocket.objects.get(name=self.pocket_name)
-                    assert pocket.free_cash == pytest.approx( Decimal(FREE_CASH) + Decimal(quantity), abs=0.01)
+                    assert pocket.free_cash == pytest.approx(
+                        Decimal(FREE_CASH) + Decimal(quantity), abs=0.01)
                     pocket.free_cash = FREE_CASH
                     pocket.save()
 
@@ -375,9 +388,9 @@ class TestOperationViews:
 
             response = api_client.post(url, data, format='json')
 
-            if quantity <= 0 :
+            if quantity <= 0:
                 assert response.status_code == 400
-                assert response.content == b'{"non_field_errors":["Quantity must be greater than 0."]}' 
+                assert response.content == b'{"non_field_errors":["Quantity must be greater than 0."]}'
             elif pocket.free_cash - quantity < 0:
                 assert response.status_code == 400
                 assert response.content == b'{"error":"Not enough cash to withdraw"}'
@@ -385,7 +398,8 @@ class TestOperationViews:
                 assert response.status_code == 201
                 assert Pocket.objects.get(name=self.pocket_name).fees == 0
                 pocket = Pocket.objects.get(name=self.pocket_name)
-                assert pocket.free_cash == pytest.approx( Decimal(FREE_CASH) - Decimal(quantity), abs=0.01)
+                assert pocket.free_cash == pytest.approx(
+                    Decimal(FREE_CASH) - Decimal(quantity), abs=0.01)
 
                 pocket.free_cash = FREE_CASH
                 pocket.save()
@@ -401,10 +415,11 @@ class TestAssetAllocationViews:
         usd = create_currency('USD', 1)
         pln = create_currency('PLN', 4)
         eur = create_currency('EUR', 1.2)
+        START_CASH = 10000000
 
         self.pocket_name = 'TestPocket'
         Pocket.objects.create(name=self.pocket_name,
-                              owner=self.user, currency=usd, fees=0)
+                              owner=self.user, currency=usd, fees=0, free_cash=START_CASH)
 
     def test_asset_allocation_list(self, api_client):
         api_client.force_authenticate(user=self.user)
