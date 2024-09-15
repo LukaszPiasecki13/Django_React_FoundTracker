@@ -10,6 +10,10 @@ import Pockets from "./components/Pockets";
 import PocketAssetsDetail from "./pages/PocketAssetsDetail";
 import PocketCharts from "./pages/PocketCharts";
 import PocketHistory from "./pages/PocketHistory";
+import '@fontsource/roboto/300.css';
+import '@fontsource/roboto/400.css';
+import '@fontsource/roboto/500.css';
+import '@fontsource/roboto/700.css';
 
 function RegisterAndLogout() {
   localStorage.clear();

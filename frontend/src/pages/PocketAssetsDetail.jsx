@@ -6,13 +6,20 @@ import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
 import Link from "@mui/material/Link";
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableHead from "@mui/material/TableHead";
-import TableRow from "@mui/material/TableRow";
+
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TableFooter
+} from "@mui/material";
+
+
 import Toolbar from "@mui/material/Toolbar";
-import { useNavigate, useLocation  } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 import api from "../api";
 import SideBar from "../components/bars/SideBar";
@@ -20,6 +27,7 @@ import AppBar from "../components/bars/AppBar";
 import PageContainer from "../components/PageContainer";
 import Title from "../components/Title";
 import AddMenus from "../components/AddMenus";
+import DataTable from "../components/DataTable";
 import { Button } from "@mui/material";
 
 function preventDefault(event) {
@@ -33,19 +41,21 @@ export default function PocketAssetsDetail() {
   const defaultTheme = createTheme();
   const [open, setOpen] = React.useState(true);
 
-  const [pocketAssetAllocationDetail, setPocketAssetAllocationDetail] = React.useState([]);
+  const [pocketAssetAllocationDetail, setPocketAssetAllocationDetail] =
+    React.useState([]);
   const [pocket, setPocket] = React.useState([]);
 
   const getOperations = () => {
     api
-    .get("api/asset-allocations", {
-      params: {
-        pocket_name: pocketName
-      }
-    })
+      .get("api/asset-allocations", {
+        params: {
+          pocket_name: pocketName,
+        },
+      })
       .then((res) => res.data)
       .then((data) => {
-        setPocketAssetAllocationDetail(data);
+        const transformedData = transformData(data);
+        setPocketAssetAllocationDetail(transformedData);
       })
       .catch((err) => alert(err.response.data.error));
   };
@@ -60,7 +70,61 @@ export default function PocketAssetsDetail() {
       .then((res) => res.data)
       .then((data) => {
         setPocket(data[0]);
-      })}
+      });
+  };
+
+  const transformData = (data) => {
+    return data.map((item) => {
+      const id = item.id;
+      const ticker = item.asset.ticker;
+      const name = item.asset.name;
+      const asset_class = item.asset.asset_class;
+      const currency = item.asset.currency.name;
+      const quantity = Number(parseFloat(item.quantity).toFixed(2));
+      const average_purchase_currency_price = Number(
+        parseFloat(item.average_purchase_currency_price).toFixed(2)
+      );
+      const average_purchase_price = Number(
+        parseFloat(item.average_purchase_price).toFixed(2)
+      );
+      const current_price = Number(
+        parseFloat(item.asset.current_price).toFixed(2)
+      );
+      const daily_change_percent = Number(
+        parseFloat(item.daily_change_percent).toFixed(2)
+      );
+      const daily_change = Number(parseFloat(item.daily_change_XXX).toFixed(2));
+      const participation = Number(parseFloat(item.participation).toFixed(1));
+      const total_value = Number(parseFloat(item.total_value_XXX).toFixed(1));
+      const rate_of_return_percent = Number(
+        parseFloat(item.rate_of_return).toFixed(1)
+      );
+      const rate_of_return_currency = Number(
+        parseFloat(item.rate_of_return_XXX).toFixed(1)
+      );
+      const profit = Number(parseFloat(item.profit_XXX).toFixed(1));
+
+      // Zwrócenie nowej płaskiej struktury
+      return {
+        id,
+        ticker,
+        name,
+        asset_class,
+        currency,
+        quantity,
+        average_purchase_currency_price,
+        average_purchase_price,
+        current_price,
+        daily_change_percent,
+        daily_change,
+        participation,
+        total_value,
+        rate_of_return_percent,
+        rate_of_return_currency,
+        profit,
+      };
+    });
+  };
 
   const toggleDrawer = () => {
     setOpen(!open);
@@ -71,6 +135,200 @@ export default function PocketAssetsDetail() {
     getPocketDetail();
   }, []);
 
+  const columns = [
+    {
+      name: "id",
+      label: "ID",
+      options: {
+        filter: true,
+        sort: true,
+        display: false,
+      },
+    },
+    {
+      name: "name",
+      label: "Name",
+      options: {
+        filter: true,
+        sort: true,
+      },
+    },
+    {
+      name: "asset_class",
+      label: "Asset Class",
+      options: {
+        filter: true,
+        sort: true,
+      },
+    },
+    {
+      name: "currency",
+      label: "Currency",
+      options: {
+        filter: true,
+        sort: true,
+      },
+    },
+    {
+      name: "quantity",
+      label: "Quantity",
+      options: {
+        filter: true,
+        sort: true,
+      },
+    },
+    {
+      name: "average_purchase_currency_price",
+      label: `Average purchase currency price [${pocket.currency?.name}]`,
+      options: {
+        filter: true,
+        sort: true,
+      },
+    },
+    {
+      name: "average_purchase_price",
+      label: `Average purchase price [${pocket.currency?.name}]`,
+      options: {
+        filter: true,
+        sort: true,
+      },
+    },
+    {
+      name: "current_price",
+      label: `Current price [${pocket.currency?.name}]`,
+      options: {
+        filter: true,
+        sort: true,
+      },
+    },
+    {
+      name: "daily_change_percent",
+      label: "Daily change %",
+      options: {
+        filter: true,
+        sort: true,
+      },
+    },
+    {
+      name: "daily_change",
+      label: `Daily change [${pocket.currency?.name}]`,
+      options: {
+        filter: true,
+        sort: true,
+      },
+    },
+    {
+      name: "participation",
+      label: "Participation in portfolio",
+      options: {
+        filter: true,
+        sort: true,
+      },
+    },
+    {
+      name: "total_value",
+      label: `Total value [${pocket.currency?.name}]`,
+      options: {
+        filter: true,
+        sort: true,
+      },
+    },
+    {
+      name: "rate_of_return_percent",
+      label: "Rate of return %",
+      options: {
+        filter: true,
+        sort: true,
+      },
+    },
+    {
+      name: "rate_of_return_currency",
+      label: `Rate of return % [${pocket.currency?.name}]`,
+      options: {
+        filter: true,
+        sort: true,
+      },
+    },
+    {
+      name: "profit",
+      label: `Profit [${pocket.currency?.name}]`,
+      options: {
+        filter: true,
+        sort: true,
+      },
+    },
+  ];
+
+  const options = {
+    filter: true,
+    selectableRows: "none",
+    expandableRows: true,
+    rowsPerPage: 50,
+    responsive: 'standard',
+    setTableProps: () => ({
+      // size: 'small',
+      stickyHeader: true,
+      padding: "none",
+      
+    }),    
+
+    renderExpandableRow: (rowData, rowMeta) => {
+      return (
+        <tr>
+          <td colSpan={4}>
+            <TableContainer>
+              <Table style={{ margin: "0 auto" }}>
+                <TableHead>
+                  <TableCell align="right">Name</TableCell>
+                  <TableCell align="right">Color</TableCell>
+                </TableHead>
+                <TableBody>
+                  <TableRow>
+                    <TableCell component="th" scope="row" align="right">
+                      ABXD
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </td>
+        </tr>
+      );
+    },
+    customFooter: () => {
+      return (
+        <TableFooter>
+          <TableRow style={{ fontWeight: "bold", backgroundColor: "#f0f0f0" }}>
+            <TableCell >Sum</TableCell>
+            <TableCell>-</TableCell>
+            <TableCell>-</TableCell>
+            <TableCell>-</TableCell>
+            <TableCell>-</TableCell>
+            <TableCell>-</TableCell>
+            <TableCell>{parseFloat(210).toFixed(2)}</TableCell>
+            <TableCell style={{ color: "green" }}>
+              {parseFloat(5).toFixed(2)}%
+            </TableCell>
+            <TableCell style={{ color: "green" }}>
+              {parseFloat(10).toFixed(2)}
+            </TableCell>
+            <TableCell>-</TableCell>
+            <TableCell>{parseFloat(3000).toFixed(1)}</TableCell>
+            <TableCell style={{ color: "green" }}>
+              {parseFloat(12).toFixed(1)}%
+            </TableCell>
+            <TableCell style={{ color: "green" }}>
+              {parseFloat(20).toFixed(1)} %
+            </TableCell>
+            <TableCell style={{ color: "green" }}>
+              {parseFloat(500).toFixed(1)}
+            </TableCell>
+          </TableRow>
+        </TableFooter>
+      );
+    },
+  };
+
   return (
     <ThemeProvider theme={defaultTheme}>
       <Box sx={{ display: "flex" }}>
@@ -79,108 +337,45 @@ export default function PocketAssetsDetail() {
         <SideBar open={open} toggleDrawer={toggleDrawer} />
         <PageContainer>
           <Grid item xs={2}>
-            <AddMenus pocket={pocket} pocketAssetAllocationDetail={pocketAssetAllocationDetail} />
+            <AddMenus
+              pocket={pocket}
+              pocketAssetAllocationDetail={pocketAssetAllocationDetail}
+            />
           </Grid>
           <Grid item xs={1}>
             <Button
               variant="contained"
               size="medium"
-              onClick={() =>navigate(`${location.pathname}/charts`)}
+              onClick={() => navigate(`${location.pathname}/charts`)}
             >
               Charts
             </Button>
           </Grid>
           <Grid item xs={1}>
-            <Button variant="contained" size="medium" onClick={() =>navigate(`${location.pathname}/history`)}>
+            <Button
+              variant="contained"
+              size="medium"
+              onClick={() => navigate(`${location.pathname}/history`)}
+            >
               History
             </Button>
           </Grid>
           <Grid item xs={12}>
-            <Paper sx={{ p: 2, display: "flex", flexDirection: "column" }}>
-              <React.Fragment>
-                <Title>Pocket Composition</Title>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Name</TableCell>
-                      <TableCell>Asset Class</TableCell>
-                      <TableCell>Currency</TableCell>
-                      <TableCell>Quantity</TableCell>
-                      <TableCell>Average purchase currency price [{pocket.currency?.name}]</TableCell>
-                      <TableCell>Average purchase price [{pocket.currency?.name}]</TableCell>
-                      <TableCell>Current price [{pocket.currency?.name}]</TableCell>
-                      <TableCell>Daily change %</TableCell>
-                      <TableCell>Daily change [{pocket.currency?.name}]</TableCell>
-                      <TableCell>Participation in portfolio</TableCell>
-                      <TableCell>Total value [{pocket.currency?.name}]</TableCell>
-                      <TableCell>Rate of return %</TableCell>
-                      <TableCell>Rate of return % [{pocket.currency?.name}]</TableCell>
-                      <TableCell>Profit [{pocket.currency?.name}]</TableCell>
-                      {/* <TableCell align="right">Dividend</TableCell> */}
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {pocketAssetAllocationDetail.map((row) => (
-                      <TableRow key={row.id}>
-                        <TableCell>{row.asset.name}</TableCell>
-                        <TableCell>{row.asset.asset_class}</TableCell>
-                        <TableCell>{row.asset.currency.name}</TableCell>
-                        <TableCell>{parseFloat(row.quantity).toFixed(2)}</TableCell>
-                        <TableCell>{parseFloat(row.average_purchase_currency_price).toFixed(2)}</TableCell>
-                        <TableCell>{parseFloat(row.average_purchase_price).toFixed(2)}</TableCell>
-                        <TableCell>{parseFloat(row.asset.current_price).toFixed(2)}</TableCell>
-                        <TableCell
-                          style={{
-                            color:
-                              row.daily_change_percent < 0 ? "red" : "green",
-                          }}
-                        >
-                          {parseFloat(row.daily_change_percent).toFixed(2)}%
-                        </TableCell>
-                        <TableCell
-                          style={{
-                            color: row.daily_change_XXX < 0 ? "red" : "green",
-                          }}
-                        >
-                          {parseFloat(row.daily_change_XXX).toFixed(2)}
-                        </TableCell>
-                        <TableCell>{parseFloat(row.participation).toFixed(1)}%</TableCell>
-                        <TableCell>{parseFloat(row.total_value_XXX).toFixed(1)}</TableCell>
-                        <TableCell
-                          style={{
-                            color: row.rate_of_return < 0 ? "red" : "green",
-                          }}
-                        >
-                          {parseFloat(row.rate_of_return).toFixed(1)}%
-                        </TableCell>
-                        <TableCell
-                          style={{
-                            color: row.rate_of_return_XXX < 0 ? "red" : "green",
-                          }}
-                        >
-                          {parseFloat(row.rate_of_return_XXX).toFixed(1)} %
-                        </TableCell>
-                        <TableCell
-                          style={{
-                            color: row.profit_XXX < 0 ? "red" : "green",
-                          }}
-                        >
-                          {parseFloat(row.profit_XXX).toFixed(1)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-                <Link
-                  color="primary"
-                  href="#"
-                  onClick={preventDefault}
-                  sx={{ mt: 3 }}
-                >
-                  See more
-                </Link>
-              </React.Fragment>
-            </Paper>
+            <DataTable
+              title={"Pocket Composition"}
+              options={options}
+              columns={columns}
+              data={
+                pocketAssetAllocationDetail ? pocketAssetAllocationDetail : []
+              }
+              colloredColumns={[
+                "daily_change",
+                "daily_change_percent",
+                "rate_of_return_percent",
+                "rate_of_return_currency",
+                "profit",
+              ]}
+            />
           </Grid>
         </PageContainer>
       </Box>

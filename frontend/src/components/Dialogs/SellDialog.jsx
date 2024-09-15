@@ -74,13 +74,13 @@ export default function SellDialog(props) {
 
   const assetClasses = getUniqueValues(
     pocketAssetAllocationDetail,
-    "asset.asset_class"
+    "asset_class"
   );
   const currencies = getUniqueValues(
     pocketAssetAllocationDetail,
-    "asset.currency.name"
+    "currency"
   );
-  const tickers = getUniqueValues(pocketAssetAllocationDetail, "asset.ticker");
+  const tickers = getUniqueValues(pocketAssetAllocationDetail, "ticker");
   const defaultCurrency = currencies.includes(pocket?.currency?.name) ? pocket.currency.name : '';
 
   const process = (e) => {

@@ -14,13 +14,14 @@ export default function PageContainer({ children }) {
           theme.palette.mode === "light"
             ? theme.palette.grey[100]
             : theme.palette.grey[900],
-        flexGrow: 1,
+        flexGrow:1,
         height: "100vh",
         overflow: "auto",
+
       }}
     >
       <Toolbar />
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
         <Grid container spacing={3}>
           {children}
         </Grid>
