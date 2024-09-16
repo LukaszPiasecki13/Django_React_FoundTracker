@@ -14,9 +14,8 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TableFooter
+  TableFooter,
 } from "@mui/material";
-
 
 import Toolbar from "@mui/material/Toolbar";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -146,6 +145,15 @@ export default function PocketAssetsDetail() {
       },
     },
     {
+      name: "ticker",
+      label: "Ticker",
+      options: {
+        filter: true,
+        sort: true,
+        display: false,
+      },
+    },
+    {
       name: "name",
       label: "Name",
       options: {
@@ -263,14 +271,14 @@ export default function PocketAssetsDetail() {
     filter: true,
     selectableRows: "none",
     expandableRows: true,
-    rowsPerPage: 50,
-    responsive: 'standard',
+    // rowsPerPage: 50,
+    responsive: "standard",
+
     setTableProps: () => ({
       // size: 'small',
       stickyHeader: true,
       padding: "none",
-      
-    }),    
+    }),
 
     renderExpandableRow: (rowData, rowMeta) => {
       return (
@@ -295,36 +303,77 @@ export default function PocketAssetsDetail() {
         </tr>
       );
     },
-    customFooter: () => {
+
+    customTableBodyFooterRender: (opts) => {
+      const theme = createTheme({
+        components: {
+          MuiTableCell: {
+            styleOverrides: {
+              root: {
+                textAlign: "center",
+                verticalAlign: "middle",
+                fontWeight: "bolder",
+                fontSize: 14,
+              },
+            },
+          },
+          MuiTableFooter: {
+            styleOverrides: {
+              root: {
+                backgroundColor: "#f5f5dc", // Kolor beżowy
+              },
+            },
+          },
+        },
+      });
+
       return (
-        <TableFooter>
-          <TableRow style={{ fontWeight: "bold", backgroundColor: "#f0f0f0" }}>
-            <TableCell >Sum</TableCell>
-            <TableCell>-</TableCell>
-            <TableCell>-</TableCell>
-            <TableCell>-</TableCell>
-            <TableCell>-</TableCell>
-            <TableCell>-</TableCell>
-            <TableCell>{parseFloat(210).toFixed(2)}</TableCell>
-            <TableCell style={{ color: "green" }}>
-              {parseFloat(5).toFixed(2)}%
-            </TableCell>
-            <TableCell style={{ color: "green" }}>
-              {parseFloat(10).toFixed(2)}
-            </TableCell>
-            <TableCell>-</TableCell>
-            <TableCell>{parseFloat(3000).toFixed(1)}</TableCell>
-            <TableCell style={{ color: "green" }}>
-              {parseFloat(12).toFixed(1)}%
-            </TableCell>
-            <TableCell style={{ color: "green" }}>
-              {parseFloat(20).toFixed(1)} %
-            </TableCell>
-            <TableCell style={{ color: "green" }}>
-              {parseFloat(500).toFixed(1)}
-            </TableCell>
-          </TableRow>
-        </TableFooter>
+        <>
+          <ThemeProvider theme={theme}>
+            <TableFooter>
+              <TableRow>
+                <TableCell />
+                {opts.columns.map((col, index) => {
+                  if (col.display === "true") {
+                    if (col.name === "id") {
+                      return <TableCell key={index}></TableCell>;
+                    } else if (col.name === "ticker") {
+                      return <TableCell key={index}></TableCell>;
+                    } else if (col.name === "name") {
+                      return <TableCell key={index}>Total</TableCell>;
+                    } else if (col.name === "asset_class") {
+                      return <TableCell key={index}></TableCell>;
+                    } else if (col.name === "currency") {
+                      return <TableCell key={index}></TableCell>;
+                    } else if (col.name === "quantity") {
+                      return <TableCell key={index}></TableCell>;
+                    } else if (col.name === "average_purchase_currency_price") {
+                      return <TableCell key={index}></TableCell>;
+                    } else if (col.name === "average_purchase_price") {
+                      return <TableCell key={index}></TableCell>;
+                    } else if (col.name === "current_price") {
+                      return <TableCell key={index}></TableCell>;
+                    } else if (col.name === "daily_change_percent") {
+                      return <TableCell key={index}>123</TableCell>;
+                    } else if (col.name === "daily_change") {
+                      return <TableCell key={index}>123</TableCell>;
+                    } else if (col.name === "participation") {
+                      return <TableCell key={index}></TableCell>;
+                    } else if (col.name === "total_value") {
+                      return <TableCell key={index}>123</TableCell>;
+                    } else if (col.name === "rate_of_return_percent") {
+                      return <TableCell key={index}>123</TableCell>;
+                    } else if (col.name === "rate_of_return_currency") {
+                      return <TableCell key={index}>123</TableCell>;
+                    } else if (col.name === "profit") {
+                      return <TableCell key={index}>123</TableCell>;
+                    }
+                  }
+                })}
+              </TableRow>
+            </TableFooter>
+          </ThemeProvider>
+        </>
       );
     },
   };
