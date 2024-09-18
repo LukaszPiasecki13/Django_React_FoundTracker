@@ -79,29 +79,19 @@ export default function PocketAssetsDetail() {
       const name = item.asset.name;
       const asset_class = item.asset.asset_class;
       const currency = item.asset.currency.name;
-      const quantity = Number(parseFloat(item.quantity).toFixed(2));
-      const average_purchase_currency_price = Number(
-        parseFloat(item.average_purchase_currency_price).toFixed(2)
+      const quantity = parseFloat(item.quantity);
+      const average_purchase_currency_price = parseFloat(
+        item.average_purchase_currency_price
       );
-      const average_purchase_price = Number(
-        parseFloat(item.average_purchase_price).toFixed(2)
-      );
-      const current_price = Number(
-        parseFloat(item.asset.current_price).toFixed(2)
-      );
-      const daily_change_percent = Number(
-        parseFloat(item.daily_change_percent).toFixed(2)
-      );
-      const daily_change = Number(parseFloat(item.daily_change_XXX).toFixed(2));
-      const participation = Number(parseFloat(item.participation).toFixed(1));
-      const total_value = Number(parseFloat(item.total_value_XXX).toFixed(1));
-      const rate_of_return_percent = Number(
-        parseFloat(item.rate_of_return).toFixed(1)
-      );
-      const rate_of_return_currency = Number(
-        parseFloat(item.rate_of_return_XXX).toFixed(1)
-      );
-      const profit = Number(parseFloat(item.profit_XXX).toFixed(1));
+      const average_purchase_price = parseFloat(item.average_purchase_price);
+      const current_price = parseFloat(item.asset.current_price);
+      const daily_change_percent = parseFloat(item.daily_change_percent);
+      const daily_change = parseFloat(item.daily_change_XXX);
+      const participation = parseFloat(item.participation);
+      const total_value = parseFloat(item.total_value_XXX);
+      const rate_of_return_percent = parseFloat(item.rate_of_return);
+      const rate_of_return_currency = parseFloat(item.rate_of_return_XXX);
+      const profit = parseFloat(item.profit_XXX);
 
       // Zwrócenie nowej płaskiej struktury
       return {
@@ -183,6 +173,9 @@ export default function PocketAssetsDetail() {
       options: {
         filter: true,
         sort: true,
+        customBodyRender: (value) => {
+          value.toFixed(2);
+        },
       },
     },
     {
@@ -191,6 +184,9 @@ export default function PocketAssetsDetail() {
       options: {
         filter: true,
         sort: true,
+        customBodyRender: (value) => {
+          value.toFixed(2);
+        },
       },
     },
     {
@@ -199,6 +195,9 @@ export default function PocketAssetsDetail() {
       options: {
         filter: true,
         sort: true,
+        customBodyRender: (value) => {
+          value.toFixed(2);
+        },
       },
     },
     {
@@ -207,6 +206,9 @@ export default function PocketAssetsDetail() {
       options: {
         filter: true,
         sort: true,
+        customBodyRender: (value) => {
+          value.toFixed(2);
+        },
       },
     },
     {
@@ -215,6 +217,9 @@ export default function PocketAssetsDetail() {
       options: {
         filter: true,
         sort: true,
+        customBodyRender: (value) => {
+          value.toFixed(2);
+        },
       },
     },
     {
@@ -223,6 +228,9 @@ export default function PocketAssetsDetail() {
       options: {
         filter: true,
         sort: true,
+        customBodyRender: (value) => {
+          value.toFixed(1);
+        },
       },
     },
     {
@@ -231,6 +239,9 @@ export default function PocketAssetsDetail() {
       options: {
         filter: true,
         sort: true,
+        customBodyRender: (value) => {
+          value.toFixed(1);
+        },
       },
     },
     {
@@ -239,6 +250,9 @@ export default function PocketAssetsDetail() {
       options: {
         filter: true,
         sort: true,
+        customBodyRender: (value) => {
+          value.toFixed(1);
+        },
       },
     },
     {
@@ -247,6 +261,9 @@ export default function PocketAssetsDetail() {
       options: {
         filter: true,
         sort: true,
+        customBodyRender: (value) => {
+          value.toFixed(1);
+        },
       },
     },
     {
@@ -255,6 +272,9 @@ export default function PocketAssetsDetail() {
       options: {
         filter: true,
         sort: true,
+        customBodyRender: (value) => {
+          value.toFixed(1);
+        },
       },
     },
     {
@@ -263,6 +283,9 @@ export default function PocketAssetsDetail() {
       options: {
         filter: true,
         sort: true,
+        customBodyRender: (value) => {
+          value.toFixed(1);
+        },
       },
     },
   ];
@@ -271,8 +294,7 @@ export default function PocketAssetsDetail() {
     filter: true,
     selectableRows: "none",
     expandableRows: true,
-    // rowsPerPage: 50,
-    responsive: "standard",
+    rowsPerPageOptions: [10, 20, 50, 100],
 
     setTableProps: () => ({
       // size: 'small',
@@ -327,6 +349,36 @@ export default function PocketAssetsDetail() {
         },
       });
 
+      // console.log(opts.data);
+      let sumDailyChange = opts.data?.reduce((acc, item) => {
+        return acc + item.data[10].props.children;
+      }, 0);
+
+      let sumTotalValue = opts.data?.reduce((acc, item) => {
+        return acc + item.data[12].props.children;
+      }, 0);
+
+      let sumDailyChangePercent = (sumDailyChange / sumTotalValue) * 100;
+
+      let sumProfit = opts.data?.reduce((acc, item) => {
+        return acc + item.data[15].props.children;
+      }, 0);
+
+      let totalValue = opts.data?.reduce((acc, item) => {
+        return acc + item.data[5].props.children * item.data[8].props.children;
+      }, 0);
+      let totalCostCurrency = opts.data?.reduce((acc, item) => {
+        return acc + item.data[5].props.children * item.data[7].props.children;
+      }, 0);
+
+      let portfolioRateOfReturn =
+        ((totalValue - totalCostCurrency) / totalCostCurrency) * 100;
+      let portfolioRateOfReturnCurrency =
+        (sumProfit / (sumTotalValue - sumProfit)) * 100;
+
+
+      console.log(portfolioRateOfReturn);
+
       return (
         <>
           <ThemeProvider theme={theme}>
@@ -354,19 +406,43 @@ export default function PocketAssetsDetail() {
                     } else if (col.name === "current_price") {
                       return <TableCell key={index}></TableCell>;
                     } else if (col.name === "daily_change_percent") {
-                      return <TableCell key={index}>123</TableCell>;
+                      return (
+                        <TableCell key={index}>
+                          {sumDailyChangePercent.toFixed(2)}
+                        </TableCell>
+                      );
                     } else if (col.name === "daily_change") {
-                      return <TableCell key={index}>123</TableCell>;
+                      return (
+                        <TableCell key={index}>
+                          {sumDailyChange.toFixed(2)}
+                        </TableCell>
+                      );
                     } else if (col.name === "participation") {
                       return <TableCell key={index}></TableCell>;
                     } else if (col.name === "total_value") {
-                      return <TableCell key={index}>123</TableCell>;
+                      return (
+                        <TableCell key={index}>
+                          {sumTotalValue.toFixed(1)}
+                        </TableCell>
+                      );
                     } else if (col.name === "rate_of_return_percent") {
-                      return <TableCell key={index}>123</TableCell>;
+                      return (
+                        <TableCell key={index}>
+                          {portfolioRateOfReturn.toFixed(1)}
+                        </TableCell>
+                      );
                     } else if (col.name === "rate_of_return_currency") {
-                      return <TableCell key={index}>123</TableCell>;
+                      return (
+                        <TableCell key={index}>
+                          {portfolioRateOfReturnCurrency.toFixed(1)}
+                        </TableCell>
+                      );
                     } else if (col.name === "profit") {
-                      return <TableCell key={index}>123</TableCell>;
+                      return (
+                        <TableCell key={index}>
+                          {sumProfit.toFixed(1)}
+                        </TableCell>
+                      );
                     }
                   }
                 })}

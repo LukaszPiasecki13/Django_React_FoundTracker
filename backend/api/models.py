@@ -62,6 +62,7 @@ class Pocket(models.Model):
     assets = models.ManyToManyField('Asset', through='AssetAllocation')
     fees = models.DecimalField(max_digits=8, decimal_places=3, default=0.0)
     currency = models.ForeignKey(Currency, on_delete=models.CASCADE)
+    net_deposit_value= models.DecimalField(max_digits=12, decimal_places=3, default=0.0)
     free_cash = models.DecimalField(max_digits=12, decimal_places=3, default=0.0)
 
     def __str__(self):

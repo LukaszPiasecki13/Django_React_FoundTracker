@@ -29,7 +29,7 @@ class AssetProcessor:
             pocket = Pocket.objects.get(
                 name=self.data['pocket_name'], owner=self.owner)
             if pocket.free_cash < Decimal(self.data['price'] * self.data['quantity']):
-                raise ValueError("Not enough free cash to buy the asset")
+                raise ValueError('Not enough free cash to buy the asset')
             else:
                 pocket.free_cash -= Decimal(self.data['price'] * self.data['quantity'] + self.data['fee'])
                 if self.data['fee'] != 0:
@@ -47,18 +47,21 @@ class AssetProcessor:
         try:
             # ASSET
             # Check if asset exists in the database
+            yf_info = yf.Ticker(self.data['ticker']).info
+            ticker_currency = yf_info['currency']
+
             asset_query = Asset.objects.filter(
                 ticker=self.data['ticker'],
                 name=asset_name,
                 asset_class=self.data['asset_class'],
-                currency=Currency.objects.get(name=self.data['currency']))
+                currency=Currency.objects.get(name=ticker_currency))
 
             if not asset_query.exists():
                 Asset.objects.create(
                     ticker=self.data['ticker'],
                     name=asset_name,
                     asset_class=self.data['asset_class'],
-                    currency=Currency.objects.get(name=self.data['currency']))
+                    currency=Currency.objects.get(name=ticker_currency))
         except Exception as e:
             raise e
 
@@ -129,11 +132,10 @@ class AssetProcessor:
             asset_query = Asset.objects.filter(
                 ticker=self.data['ticker'],
                 name=asset_name,
-                asset_class=self.data['asset_class'],
-                currency=Currency.objects.get(name=self.data['currency']))
+                asset_class=self.data['asset_class'])
 
             if not asset_query.exists():
-                raise ValueError("Asset does not exist in the database")
+                raise ValueError('Asset does not exist in the database')
             
         except Exception as e:
             raise e
@@ -197,10 +199,10 @@ class AssetProcessor:
                     ...
                     # TODO: Dodawanie pieniędzy do portfela ze sprzedaży
                 elif check_operation_indicator < 0:
-                    raise ValueError("Not enough assets to sell")
+                    raise ValueError('Not enough assets to sell')
 
             else:
-                raise ValueError("Asset allocation does not exist in the database")
+                raise ValueError('Asset allocation does not exist in the database')
 
         except Exception as e:
             raise e
@@ -218,7 +220,7 @@ class AssetProcessor:
     def withdraw_funds(self):
         pocket = Pocket.objects.get(name=self.data['pocket_name'], owner=self.owner)
         if pocket.free_cash < Decimal(self.data['quantity']):
-            raise ValueError("Not enough free cash to withdraw")
+            raise ValueError('Not enough free cash to withdraw')
         else:
             pocket.free_cash -= Decimal(self.data['quantity'])
             pocket.fees += Decimal(self.data['fee'])
@@ -298,13 +300,13 @@ class AssetProcessor:
 
     @staticmethod
     def _calculate_average_purchase_price(buy_transactions: list, sell_transactions: list = []) -> float:
-        """
+        '''
         Calculate the average stock price after considering purchase and sale transactions, including transaction fees.
 
         :param buy_transactions: List of tuples (price_per_share, number_of_shares, fee) for each purchase transaction.
         :param sell_transactions: Optional list of tuples (price_per_share, number_of_shares, fee) for each sale transaction.
         :return: The average stock price after all transactions including fees.
-        """
+        '''
         # Calculate the total value and number of shares based on purchase transactions
         total_purchase_value = sum((price * quantity + fee)
                                 for price, quantity, fee in buy_transactions)
@@ -363,8 +365,8 @@ def currencies_prices_update(referece_currency: str = 'PLN'):
         currency.reference_currency_name = referece_currency
         if currency.name != referece_currency:
             yf_exchange_info = yf.Ticker(
-                f"{currency.name}{referece_currency}=X").info
-            currency.exchange_rate = Decimal(yf_exchange_info["bid"])
+                f'{currency.name}{referece_currency}=X').info
+            currency.exchange_rate = Decimal(yf_exchange_info['bid'])
             currency.save()
         else:
             currency.exchange_rate = 1.0
