@@ -31,7 +31,9 @@ class OperationsViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Operation.objects.filter(owner=self.request.user)
+        pocket_name = self.request.query_params.get('pocket_name', None)
+        queryset = Operation.objects.filter(owner=self.request.user, pocket_name=pocket_name)
+        return queryset
 
     def perform_create(self, serializer):
         # TODO: Walidacja danych

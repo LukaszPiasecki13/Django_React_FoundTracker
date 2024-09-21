@@ -21,17 +21,13 @@ import Toolbar from "@mui/material/Toolbar";
 import { useNavigate, useLocation } from "react-router-dom";
 
 import api from "../api";
-import SideBar from "../components/bars/SideBar";
-import AppBar from "../components/bars/AppBar";
+import SideBar from "../components/Bars/SideBar";
+import AppBar from "../components/Bars/AppBar";
 import PageContainer from "../components/PageContainer";
 import Title from "../components/Title";
 import AddMenus from "../components/AddMenus";
 import DataTable from "../components/DataTable";
 import { Button } from "@mui/material";
-
-function preventDefault(event) {
-  event.preventDefault();
-}
 
 export default function PocketAssetsDetail() {
   const navigate = useNavigate();
@@ -39,37 +35,34 @@ export default function PocketAssetsDetail() {
   const pocketName = useParams().slug;
   const defaultTheme = createTheme();
   const [open, setOpen] = React.useState(true);
-
   const [pocketAssetAllocationDetail, setPocketAssetAllocationDetail] =
     React.useState([]);
   const [pocket, setPocket] = React.useState([]);
 
-  const getOperations = () => {
-    api
-      .get("api/asset-allocations", {
+  const getAssetAllocations = async () => {
+    try {
+      const res = await api.get("api/asset-allocations", {
         params: {
           pocket_name: pocketName,
         },
-      })
-      .then((res) => res.data)
-      .then((data) => {
-        const transformedData = transformData(data);
-        setPocketAssetAllocationDetail(transformedData);
-      })
-      .catch((err) => alert(err.response.data.error));
+      });
+
+      const transformedData = transformData(res.data);
+      setPocketAssetAllocationDetail(transformedData);
+    } catch (err) {
+      alert(err.response.data.error);
+    }
   };
 
-  const getPocketDetail = () => {
-    api
-      .get("api/pockets", {
-        params: {
-          name: pocketName,
-        },
-      })
-      .then((res) => res.data)
-      .then((data) => {
-        setPocket(data[0]);
+  const getPocketDetail = async () => {
+    try {
+      const res = await api.get("api/pockets", {
+        params: { name: pocketName },
       });
+      setPocket(res.data[0]);
+    } catch (err) {
+      alert(err.response.data.error);
+    }
   };
 
   const transformData = (data) => {
@@ -120,9 +113,23 @@ export default function PocketAssetsDetail() {
   };
 
   React.useEffect(() => {
-    getOperations();
-    getPocketDetail();
+    const fetchData = async () => {
+      await Promise.all([getAssetAllocations(), getPocketDetail()]);
+    };
+    fetchData();
   }, []);
+
+  const cellStyle = (value, isCollored = false) => {
+    if (isCollored) {
+      if (value < 0) {
+        return <div style={{ color: "red" }}>{value}</div>;
+      } else if (value > 0) {
+        return <div style={{ color: "green" }}>{value}</div>;
+      }
+    } else {
+      return <div style={{ color: "black" }}>{value}</div>;
+    }
+  };
 
   const columns = [
     {
@@ -175,6 +182,7 @@ export default function PocketAssetsDetail() {
         sort: true,
         customBodyRender: (value) => {
           value.toFixed(2);
+          return cellStyle(value);
         },
       },
     },
@@ -185,7 +193,7 @@ export default function PocketAssetsDetail() {
         filter: true,
         sort: true,
         customBodyRender: (value) => {
-          value.toFixed(2);
+          return cellStyle(value);
         },
       },
     },
@@ -197,6 +205,7 @@ export default function PocketAssetsDetail() {
         sort: true,
         customBodyRender: (value) => {
           value.toFixed(2);
+          return cellStyle(value, true);
         },
       },
     },
@@ -208,6 +217,7 @@ export default function PocketAssetsDetail() {
         sort: true,
         customBodyRender: (value) => {
           value.toFixed(2);
+          return cellStyle(value);
         },
       },
     },
@@ -219,6 +229,7 @@ export default function PocketAssetsDetail() {
         sort: true,
         customBodyRender: (value) => {
           value.toFixed(2);
+          return cellStyle(value, true);
         },
       },
     },
@@ -230,6 +241,7 @@ export default function PocketAssetsDetail() {
         sort: true,
         customBodyRender: (value) => {
           value.toFixed(1);
+          return cellStyle(value, true);
         },
       },
     },
@@ -240,7 +252,7 @@ export default function PocketAssetsDetail() {
         filter: true,
         sort: true,
         customBodyRender: (value) => {
-          value.toFixed(1);
+          return value.toFixed(1);
         },
       },
     },
@@ -252,6 +264,7 @@ export default function PocketAssetsDetail() {
         sort: true,
         customBodyRender: (value) => {
           value.toFixed(1);
+          return cellStyle(value);
         },
       },
     },
@@ -263,6 +276,7 @@ export default function PocketAssetsDetail() {
         sort: true,
         customBodyRender: (value) => {
           value.toFixed(1);
+          return cellStyle(value, true);
         },
       },
     },
@@ -274,6 +288,7 @@ export default function PocketAssetsDetail() {
         sort: true,
         customBodyRender: (value) => {
           value.toFixed(1);
+          return cellStyle(value, true);
         },
       },
     },
@@ -285,6 +300,7 @@ export default function PocketAssetsDetail() {
         sort: true,
         customBodyRender: (value) => {
           value.toFixed(1);
+          return cellStyle(value, true);
         },
       },
     },
@@ -349,7 +365,6 @@ export default function PocketAssetsDetail() {
         },
       });
 
-      // console.log(opts.data);
       let sumDailyChange = opts.data?.reduce((acc, item) => {
         return acc + item.data[10].props.children;
       }, 0);
@@ -375,9 +390,6 @@ export default function PocketAssetsDetail() {
         ((totalValue - totalCostCurrency) / totalCostCurrency) * 100;
       let portfolioRateOfReturnCurrency =
         (sumProfit / (sumTotalValue - sumProfit)) * 100;
-
-
-      console.log(portfolioRateOfReturn);
 
       return (
         <>
@@ -493,13 +505,6 @@ export default function PocketAssetsDetail() {
               data={
                 pocketAssetAllocationDetail ? pocketAssetAllocationDetail : []
               }
-              colloredColumns={[
-                "daily_change",
-                "daily_change_percent",
-                "rate_of_return_percent",
-                "rate_of_return_currency",
-                "profit",
-              ]}
             />
           </Grid>
         </PageContainer>
